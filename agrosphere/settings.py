@@ -128,7 +128,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
+AUTH_USER_MODEL = 'accounts.User'
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
@@ -235,15 +235,15 @@ CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'Africa/Lagos'
 CELERY_BEAT_SCHEDULE = {
     'send-farming-reminders': {
-        'task': 'apps.notifications.tasks.send_scheduled_reminders',
+        'task': 'notifications.tasks.send_scheduled_reminders',
         'schedule': timedelta(hours=1),  # Check every hour
     },
     'update-weather-alerts': {
-        'task': 'apps.farming.tasks.update_weather_alerts',
+        'task': 'farming.tasks.update_weather_alerts',
         'schedule': timedelta(hours=6),  # Update every 6 hours
     },
     'process-investment-returns': {
-        'task': 'apps.investments.tasks.process_matured_investments',
+        'task': 'investments.tasks.process_matured_investments',
         'schedule': timedelta(days=1),  # Daily processing
     },
 }
@@ -267,10 +267,149 @@ CORS_ALLOW_CREDENTIALS = True
 # API Documentation (Swagger)
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Agrosphere API',
-    'DESCRIPTION': 'Comprehensive agricultural ecosystem API',
+    'DESCRIPTION': 'Comprehensive agricultural ecosystem API with Ethereum blockchain',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
 }
 
+ETHEREUM_CONFIG = {
+    'NETWORK': config('ETHEREUM_NETWORK', default='sepolia'),  # mainnet, sepolia, goerli, ganache
+    'RPC_URL': config('ETHEREUM_RPC_URL', default='https://sepolia.infura.io/v3/YOUR_PROJECT_ID'),
+    'INFURA_PROJECT_ID': config('INFURA_PROJECT_ID', default=''),
+    'INFURA_PROJECT_SECRET': config('INFURA_PROJECT_SECRET', default=''),
+    'AGROCOIN_CONTRACT_ADDRESS': config('AGROCOIN_CONTRACT_ADDRESS', default=''),
+    'TREASURY_WALLET_PRIVATE_KEY': config('TREASURY_WALLET_PRIVATE_KEY', default=''),
+    'PLATFORM_FEE_WALLET': config('PLATFORM_FEE_WALLET', default=''),
+    'AGROCOIN_TO_NAIRA_RATE': config('AGROCOIN_TO_NAIRA_RATE', default=100, cast=float),
+    'GAS_PRICE_GWEI': config('GAS_PRICE_GWEI', default=20, cast=int),
+    'GAS_LIMIT': config('GAS_LIMIT', default=100000, cast=int),
+    'TRANSACTION_TIMEOUT': 120,  # seconds
+    'CHAIN_ID': {
+        'mainnet': 1,
+        'sepolia': 11155111,
+        'goerli': 5,
+        'ganache': 1337,
+    },
+}
+
 # AI Integrations
-GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
+GEMINI_CONFIG = {
+    'API_KEY': os.getenv('GEMINI_API_KEY'),
+    'MODEL': config('GEMINI_MODEL', default='gemini-1.5-flash'),
+    'TEMPERATURE': 0.7,
+    'MAX_OUTPUT_TOKENS': 2048,
+}
+
+# Africa's Talking (USSD) Configuration
+AFRICAS_TALKING_CONFIG = {
+    'USERNAME': os.getenv('AFRICAS_TALKING_USERNAME'),
+    'API_KEY': config('AFRICAS_TALKING_API_KEY'),
+    'USSD_SHORT_CODE': config('USSD_SHORT_CODE', default='*384*1234#'),
+}
+
+# Weather API Configuration
+WEATHER_API_KEY = config('OPENWEATHER_API_KEY', default='')
+
+
+# Email Configuration (SendGrid)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+SENDGRID_API_KEY = config('SENDGRID_API_KEY', default='')
+EMAIL_HOST = 'smtp.sendgrid.net'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'apikey'
+EMAIL_HOST_PASSWORD = SENDGRID_API_KEY
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')
+
+# SMS Configuration
+TWILIO_CONFIG = {
+    'ACCOUNT_SID': config('TWILIO_ACCOUNT_SID', default=''),
+    'AUTH_TOKEN': config('TWILIO_AUTH_TOKEN', default=''),
+    'PHONE_NUMBER': config('TWILIO_PHONE_NUMBER', default=''),
+}
+
+# Feature Flags
+ENABLE_WEB3 = config('ENABLE_WEB3', default=True, cast=bool)
+ENABLE_USSD = config('ENABLE_USSD', default=True, cast=bool)
+ENABLE_AI_FEATURES = config('ENABLE_AI_FEATURES', default=True, cast=bool)
+ENABLE_NOTIFICATIONS = config('ENABLE_NOTIFICATIONS', default=True, cast=bool)
+DEMO_MODE = config('DEMO_MODE', default=True, cast=bool)
+
+# Platform Settings
+PLATFORM_COMMISSION_RATE = 0.05  # 5% commission on transactions
+MIN_INVESTMENT_AMOUNT = 5000  # NGN 5,000 minimum investment
+MAX_FILE_UPLOAD_SIZE = 5 * 1024 * 1024  # 5MB
+
+# Nigerian Cities (for location-based features)
+NIGERIAN_CITIES = [
+    'Lagos', 'Abuja', 'Kano', 'Ibadan', 'Port Harcourt',
+    'Benin City', 'Jos', 'Kaduna', 'Enugu', 'Aba',
+    'Onitsha', 'Warri', 'Ilorin', 'Calabar', 'Akure'
+]
+
+# Crop Categories
+CROP_CATEGORIES = [
+    'Vegetables', 'Fruits', 'Grains', 'Legumes',
+    'Tubers', 'Herbs', 'Cash Crops'
+]
+
+# Expert Specializations
+EXPERT_SPECIALIZATIONS = [
+    'Soil Science', 'Veterinary Medicine', 'Agronomy',
+    'Crop Science', 'Farm Management', 'Irrigation',
+    'Pest Control', 'Organic Farming'
+]
+
+# Logging Configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'logs' / 'agromentor360.log',
+            'formatter': 'verbose',
+        },
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'handlers': ['console', 'file'],
+        'level': 'INFO',
+    },
+}
+
+# Sentry Configuration (Error Tracking)
+SENTRY_DSN = config('SENTRY_DSN', default='', cast=str)
+if SENTRY_DSN and not DEBUG:
+    import sentry_sdk
+    from sentry_sdk.integrations.django import DjangoIntegration
+    
+    sentry_sdk.init(
+        dsn=SENTRY_DSN, #type:ignore
+        integrations=[DjangoIntegration()],
+        traces_sample_rate=0.1,
+        send_default_pii=True
+    )
+
+# Security Settings for Production
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True

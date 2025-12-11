@@ -11,12 +11,14 @@ dj-database-url
 # Authentication & Security
 djangorestframework-simplejwt
 cryptography
+django-environ
 PyJWT
 
-# Solana Blockchain Integration
-solana
-solders
-anchorpy
+# Ethereum Blockchain Integration
+web3
+eth-account
+eth-utils
+py-solc-x
 
 # AI Integration - Google Gemini
 google-generativeai
@@ -28,6 +30,7 @@ africastalking
 celery
 redis
 django-redis
+django-celery-beat
 
 # Weather API
 requests
@@ -47,6 +50,7 @@ sentry-sdk
 pytest
 pytest-django
 factory-boy
+faker
 
 # API Documentation
 drf-spectacular
@@ -71,3 +75,5 @@ opencv-python-headless
 # Environment
 gunicorn
 whitenoise
+
+stripe
