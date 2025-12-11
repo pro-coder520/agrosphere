@@ -1,0 +1,73 @@
+# AgroMentor 360 Backend - Python Dependencies
+# Core Framework
+Django
+djangorestframework
+django-filter
+
+# Database & ORM
+psycopg2-binary
+dj-database-url
+
+# Authentication & Security
+djangorestframework-simplejwt
+cryptography
+PyJWT
+
+# Solana Blockchain Integration
+solana
+solders
+anchorpy
+
+# AI Integration - Google Gemini
+google-generativeai
+Pillow
+# USSD Integration - Africa's Talking
+africastalking
+
+# Task Queue & Caching
+celery
+redis
+django-redis
+
+# Weather API
+requests
+
+# File Storage
+boto3
+django-storages
+
+# Utilities
+python-decouple
+phonenumbers
+geopy
+# Monitoring & Logging
+sentry-sdk
+
+# Testing
+pytest
+pytest-django
+factory-boy
+
+# API Documentation
+drf-spectacular
+
+# Payment Integration (Mock for hackathon)
+stripe
+
+# Excel/CSV Export
+openpyxl
+pandas
+
+# SMS & Email
+twilio
+sendgrid
+
+# Rate Limiting
+django-ratelimit
+
+# Image Processing
+opencv-python-headless
+
+# Environment
+gunicorn
+whitenoise
