@@ -58,7 +58,6 @@ def sync_pending_transactions(self):
                     confirmed_count += 1
                     
                     # Trigger post-confirmation tasks
-                    # FIX: Add type: ignore because 'delay' is added dynamically by Celery
                     process_confirmed_transaction.delay(str(tx.id)) # type: ignore
                 
                 elif verification.get('status') == 'failed':
@@ -100,13 +99,16 @@ def process_confirmed_transaction(transaction_id):
         
         tx = Transaction.objects.select_related('from_wallet__user', 'to_wallet__user').get(id=transaction_id)
         
+        # FIX: Safe access to hash. Use empty string if None to prevent "None is not subscriptable" error
+        tx_hash_display = (tx.ethereum_tx_hash or "")[:10]
+
         # Send confirmation notification
         if tx.from_wallet:
-            message = f"✅ Transaction confirmed! {tx.amount} AC sent successfully. TxHash: {tx.ethereum_tx_hash[:10]}..."
+            message = f"✅ Transaction confirmed! {tx.amount} AC sent successfully. TxHash: {tx_hash_display}..."
             send_sms_notification.delay(tx.from_wallet.user.phone_number, message) # type: ignore
         
         if tx.to_wallet:
-            message = f"✅ You received {tx.amount} AC! TxHash: {tx.ethereum_tx_hash[:10]}..."
+            message = f"✅ You received {tx.amount} AC! TxHash: {tx_hash_display}..."
             send_sms_notification.delay(tx.to_wallet.user.phone_number, message) # type: ignore
         
         # Update related records based on transaction type

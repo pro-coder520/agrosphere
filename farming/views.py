@@ -5,13 +5,13 @@ from rest_framework.decorators import api_view, permission_classes, parser_class
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
+from typing import Dict, Any # Added for type hinting
 
 from .models import Farm, Crop, FarmTask
 from .serializers import (
     FarmSerializer, 
     CropSerializer, 
     FarmTaskSerializer,
-    DiseaseDetectionSerializer  # Assumed to exist for image upload
 )
 
 # ----------------------------------------------------------------
@@ -221,14 +221,20 @@ def task_list(request):
 def create_task(request):
     """Create a new task"""
     serializer = FarmTaskSerializer(data=request.data)
+    
     if serializer.is_valid():
-        # Validate farm ownership
-        farm = serializer.validated_data['farm']
+        # FIX: Explicit type hint to tell Pylance this is a Dict, not Empty
+        validated_data: Dict[str, Any] = serializer.validated_data # type: ignore
+        
+        # Now accessing ['farm'] works correctly
+        farm = validated_data['farm']
+        
         if farm.owner != request.user:
              return Response({'error': 'Not authorized'}, status=status.HTTP_403_FORBIDDEN)
              
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 

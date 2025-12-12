@@ -41,6 +41,7 @@ django-storages
 
 # Utilities
 python-decouple
+python-dotenv
 phonenumbers
 geopy
 # Monitoring & Logging

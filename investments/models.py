@@ -50,7 +50,7 @@ class FarmInvestment(models.Model):
         max_digits=5, 
         decimal_places=2,
         help_text="Expected Return on Investment percentage (e.g. 15.00 for 15%)",
-        default=0.00
+        default=Decimal(0.00)
     )
     projected_returns = models.DecimalField(
         max_digits=12, 
@@ -59,6 +59,8 @@ class FarmInvestment(models.Model):
         blank=True,
         help_text="Calculated payout amount"
     )
+    expected_return_ac = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    actual_return_ac = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
 
     # Status & Dates
     status = models.CharField(

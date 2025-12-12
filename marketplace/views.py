@@ -136,19 +136,19 @@ def create_order(request):
         product = get_object_or_404(Product, id=item_data['product_id'])
         quantity = item_data['quantity']
         
-        if product.quantity < quantity:
+        if product.quantity_available < quantity:
             return Response(
                 {'error': f'Insufficient stock for {product.name}'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        subtotal = product.price * quantity
+        subtotal = product.price_agrocoin * quantity
         total_amount += subtotal
         
         order_items.append({
             'product': product,
             'quantity': quantity,
-            'price': product.price,
+            'price': product.price_agrocoin,
             'subtotal': subtotal
         })
     
@@ -301,7 +301,7 @@ def create_review(request, product_id):
         
         # Update product rating
         avg_rating = product.reviews.aggregate(Avg('rating'))['rating__avg']
-        product.rating = avg_rating
+        product.average_rating = avg_rating
         product.save(update_fields=['rating'])
         
         return Response(serializer.data, status=status.HTTP_201_CREATED)

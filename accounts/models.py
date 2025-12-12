@@ -2,7 +2,10 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 from django.db import models
 from django.core.validators import RegexValidator
 from django.utils import timezone
+from decimal import Decimal
 import uuid
+
+from agrosphere import settings
 
 class UserManager(BaseUserManager):
     """
@@ -156,7 +159,7 @@ class UserProfile(models.Model):
         ('large', 'Large (10+ acres)'),
     ]
     
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='profile')
     
     # Profile image
     avatar = models.ImageField(upload_to='profiles/avatars/', null=True, blank=True)
@@ -201,12 +204,11 @@ class UserProfile(models.Model):
     total_points = models.IntegerField(default=0)
     badges = models.JSONField(default=list, help_text="Achievement badges earned")
     level = models.IntegerField(default=1)
-    
     # SDG Impact tracking
     co2_offset = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        default=0,
+        default=Decimal('0.00'),
         help_text="Estimated CO2 offset in kg"
     )
     

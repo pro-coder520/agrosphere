@@ -22,10 +22,12 @@ class GeminiAIService:
         """
         Initialize Gemini AI with API key from settings
         """
-        self.model = genai.GenerativeModel(
-            model_name=settings.GEMINI_CONFIG['MODEL'],
-            api_key=settings.GEMINI_CONFIG['API_KEY']
-        )
+        # FIX 1: Configure API Key globally
+        genai.configure(api_key=settings.GEMINI_CONFIG['API_KEY']) #type:ignore
+        
+        # FIX 2: Initialize model without passing api_key argument
+        self.model = genai.GenerativeModel(model_name=settings.GEMINI_CONFIG['MODEL']) #type:ignore
+        
         self.generation_config = GenerationConfig(
             temperature=settings.GEMINI_CONFIG['TEMPERATURE'],
             max_output_tokens=settings.GEMINI_CONFIG['MAX_OUTPUT_TOKENS'],
@@ -287,6 +289,7 @@ class GeminiAIService:
             2. Practical steps if applicable
             3. Important considerations
             4. Additional tips
+            5. If you do not have the answer, do not hesitate to search the web.
             
             Keep the language simple and accessible.
             """

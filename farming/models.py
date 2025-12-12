@@ -46,8 +46,6 @@ class Farm(models.Model):
         help_text="Size in acres",
         validators=[MinValueValidator(0.01)]
     )
-    crops = models.TextField(max_length=30)
-    
     # Location
     city = models.CharField(max_length=100)
     state = models.CharField(max_length=100)
@@ -101,6 +99,7 @@ class Farm(models.Model):
             models.Index(fields=['owner', 'is_active']),
             models.Index(fields=['city', 'state']),
         ]
+    crops: models.Manager['Crop']
     
     def __str__(self):
         return f"{self.name} - {self.owner.get_full_name()}"
