@@ -35,7 +35,7 @@ def get_wallet(request):
                 wallet.agrocoin_balance = blockchain_balance
                 wallet.update_naira_equivalent()
                 
-                eth_balance = ethereum_service.get_eth_balance(wallet.public_key)
+                eth_balance = ethereum_service.get_balance(wallet.public_key)
                 wallet.eth_balance = eth_balance
                 wallet.last_sync = timezone.now()
                 wallet.save()

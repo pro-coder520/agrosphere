@@ -5,6 +5,125 @@ from decimal import Decimal
 from django.utils import timezone
 import uuid
 
+class FarmInvestment(models.Model):
+    """
+    Tracks financial investments made by users into farms or specific crop cycles.
+    """
+    STATUS_CHOICES = [
+        ('pending', 'Pending Payment'),
+        ('active', 'Active'),
+        ('matured', 'Matured/Completed'),
+        ('cancelled', 'Cancelled'),
+        ('refunded', 'Refunded'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    
+    # Relationships
+    investor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='investments' # Matches: user.investments.all()
+    )
+    farm = models.ForeignKey(
+        'farming.Farm',
+        on_delete=models.CASCADE,
+        related_name='investments'
+    )
+    # Optional: Link to specific crop cycle if investment is crop-specific
+    crop = models.ForeignKey(
+        'farming.Crop',
+        on_delete=models.SET_NULL,
+        null=True, 
+        blank=True,
+        related_name='investors'
+    )
+
+    # Financials
+    amount = models.DecimalField(
+        max_digits=12, 
+        decimal_places=2,
+        validators=[MinValueValidator(0.01)],
+        help_text="Amount invested in base currency"
+    )
+    expected_roi = models.DecimalField(
+        max_digits=5, 
+        decimal_places=2,
+        help_text="Expected Return on Investment percentage (e.g. 15.00 for 15%)",
+        default=0.00
+    )
+    projected_returns = models.DecimalField(
+        max_digits=12, 
+        decimal_places=2,
+        null=True, 
+        blank=True,
+        help_text="Calculated payout amount"
+    )
+
+    # Status & Dates
+    status = models.CharField(
+        max_length=20, 
+        choices=STATUS_CHOICES, 
+        default='pending',
+        db_index=True
+    )
+    start_date = models.DateField(null=True, blank=True)
+    maturity_date = models.DateField(null=True, blank=True)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Farm Investment"
+        verbose_name_plural = "Farm Investments"
+        indexes = [
+            models.Index(fields=['investor', 'status']),
+        ]
+
+    def __str__(self):
+        return f"{self.investor} - {self.farm.name} ({self.amount})"
+
+    def save(self, *args, **kwargs):
+        """Auto-calculate projected returns if ROI is set"""
+        if self.amount and self.expected_roi and not self.projected_returns:
+            multiplier = 1 + (self.expected_roi / 100)
+            self.projected_returns = self.amount * multiplier
+        super().save(*args, **kwargs)
+
+class InvestmentReturn(models.Model):
+    """
+    Tracks financial returns distributed to investors.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    
+    investment = models.ForeignKey(
+        FarmInvestment,
+        on_delete=models.CASCADE,
+        related_name='returns'  # Matches the serializer's source='returns'
+    )
+    
+    amount = models.DecimalField(
+        max_digits=12, 
+        decimal_places=2,
+        help_text="Amount distributed in AC"
+    )
+    
+    distribution_date = models.DateField(default=timezone.now)
+    
+    # Optional: Transaction reference if paid on-chain
+    transaction_hash = models.CharField(max_length=255, null=True, blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-distribution_date']
+        verbose_name = "Investment Return"
+        verbose_name_plural = "Investment Returns"
+
+    def __str__(self):
+        return f"{self.amount} AC return for {self.investment}"
 
 class InvestmentOpportunity(models.Model):
     """
@@ -101,7 +220,7 @@ class InvestmentOpportunity(models.Model):
         max_length=200,
         null=True,
         blank=True,
-        help_text="Solana smart contract for investment"
+        help_text="Ethereum smart contract for investment"
     )
     
     # Stats
@@ -144,7 +263,7 @@ class InvestmentOpportunity(models.Model):
     
     def save(self, *args, **kwargs):
         """Auto-calculate Naira values and funding percentage"""
-        conversion_rate = Decimal(str(settings.SOLANA_CONFIG['AGROCOIN_TO_NAIRA_RATE']))
+        conversion_rate = Decimal(str(settings.ETHEREUM_CONFIG['AGROCOIN_TO_NAIRA_RATE']))
         self.target_amount_naira = self.target_amount_ac * conversion_rate
         self.minimum_investment_naira = self.minimum_investment_ac * conversion_rate
         
@@ -280,7 +399,7 @@ class Investment(models.Model):
     
     def save(self, *args, **kwargs):
         """Auto-calculate Naira values"""
-        conversion_rate = Decimal(str(settings.SOLANA_CONFIG['AGROCOIN_TO_NAIRA_RATE']))
+        conversion_rate = Decimal(str(settings.ETHEREUM_CONFIG['AGROCOIN_TO_NAIRA_RATE']))
         self.amount_naira = self.amount_ac * conversion_rate
         self.expected_return_naira = self.expected_return_ac * conversion_rate
         
@@ -309,7 +428,7 @@ class Investment(models.Model):
     @property
     def profit_naira(self):
         """Calculate profit in Naira"""
-        conversion_rate = Decimal(str(settings.SOLANA_CONFIG['AGROCOIN_TO_NAIRA_RATE']))
+        conversion_rate = Decimal(str(settings.ETHEREUM_CONFIG['AGROCOIN_TO_NAIRA_RATE']))
         return self.profit_ac * conversion_rate
     
     @property
@@ -445,7 +564,7 @@ class Portfolio(models.Model):
         self.matured_investments_count = stats['matured_count'] or 0
         
         # Calculate Naira equivalents
-        conversion_rate = Decimal(str(settings.SOLANA_CONFIG['AGROCOIN_TO_NAIRA_RATE']))
+        conversion_rate = Decimal(str(settings.ETHEREUM_CONFIG['AGROCOIN_TO_NAIRA_RATE']))
         self.total_invested_naira = self.total_invested_ac * conversion_rate
         self.total_returns_naira = self.total_returns_ac * conversion_rate
         

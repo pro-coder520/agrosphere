@@ -183,7 +183,7 @@ class EthereumService:
             logger.error(f"Error decrypting private key: {str(e)}")
             raise Exception("Failed to decrypt wallet key")
     
-    def get_eth_balance(self, address):
+    def get_balance(self, address):
         """
         Get ETH balance for a wallet
         
