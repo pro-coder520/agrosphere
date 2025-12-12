@@ -59,7 +59,7 @@ class FarmInvestment(models.Model):
         blank=True,
         help_text="Calculated payout amount"
     )
-    expected_return_ac = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    expected_return_ac = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal(0))
     actual_return_ac = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
 
     # Status & Dates

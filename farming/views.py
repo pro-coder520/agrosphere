@@ -6,6 +6,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from typing import Dict, Any # Added for type hinting
+from .tts_service import tts_service
+from .speech_service import sts_service
+from django.http import HttpResponse
+from rest_framework.parsers import MultiPartParser, FormParser # Required for file uploads
 
 from .models import Farm, Crop, FarmTask
 from .serializers import (
@@ -197,6 +201,66 @@ def get_farming_tips(request):
 
     return Response({"tips": tips})
 
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def get_audio_guidance(request):
+    """
+    Text-to-Speech: Convert text (e.g., AI tip) to audio in local language.
+    Used when a farmer clicks "Listen" on a text tip.
+    """
+    text = request.data.get('text')
+    lang = request.data.get('language', 'pcm') # Default to Pidgin
+    
+    if not text:
+        return Response({'error': 'Text is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # FIX: Call the instance 'tts_service', not the class 'YarnGPTService'
+    audio_content = tts_service.generate_audio(text, lang)
+    
+    if audio_content:
+        # Return audio file directly (streamed)
+        return HttpResponse(audio_content, content_type="audio/mpeg")
+    
+    return Response({'error': 'Failed to generate audio'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+@parser_classes([MultiPartParser, FormParser]) # Enable file uploads
+def voice_assistant(request):
+    """
+    Speech-to-Speech: Full voice conversation pipeline.
+    Used when a farmer records a question via microphone.
+    
+    Pipeline:
+    1. Upload Audio -> 2. Transcribe (Deepgram) -> 3. AI Answer (Gemini) -> 4. Generate Audio (TTS)
+    """
+    audio_file = request.FILES.get('audio')
+    language = request.data.get('language', 'ha') # Default to Hausa for rural context
+
+    if not audio_file:
+        return Response({'error': 'No audio recorded'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Call the Speech Service Manager
+    result = sts_service.process_voice_query(audio_file, language)
+
+    if not result:
+        return Response({'error': 'Failed to process voice command'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    # Return audio blob so it plays immediately
+    response = HttpResponse(result['audio_content'], content_type="audio/mpeg")
+    
+    # Attach text transcripts in headers so the UI can display them
+    # (Optional: You might need to base64 encode these if they contain special characters)
+    try:
+        response['X-Transcription'] = result['transcription']
+        # Truncate response header to avoid overflow
+        response['X-Text-Response'] = result['text_response'][:500] 
+    except:
+        pass # Ignore header errors, audio is the priority
+    
+    return response
 
 # ----------------------------------------------------------------
 # Task Management

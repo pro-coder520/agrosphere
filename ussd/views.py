@@ -1,8 +1,3 @@
-"""
-AgroMentor 360 - USSD Interface
-Provides mobile access for rural farmers without internet using Africa's Talking
-"""
-
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
@@ -14,11 +9,8 @@ from accounts.models import User
 from farming.models import Farm, Crop, FarmTask
 from blockchain.models import Wallet
 from marketplace.models import Product
-from django.conf import settings
+from agrosphere import settings
 import logging
-import json
-from datetime import datetime, timedelta
-
 logger = logging.getLogger(__name__)
 
 
@@ -109,10 +101,10 @@ def show_main_menu(user):
         menu += "6. Expert Consultation\n"
         menu += "7. Account Settings"
     else:
-        menu = "CON Welcome to AgroMentor 360\n"
+        menu = "CON Welcome to Agrosphere\n"
         menu += "1. Register\n"
         menu += "2. Login\n"
-        menu += "3. About AgroMentor"
+        menu += "3. About Agrosphere"
     
     return menu
 
@@ -129,7 +121,7 @@ def handle_registration(phone_number, user_input, session_data):
         elif user_input[0] == '2':  # Login
             return "CON Enter your 4-digit PIN:"
         elif user_input[0] == '3':  # About
-            return "END AgroMentor 360: Your AI farming companion. We provide crop guidance, expert access, and marketplace for Nigerian farmers."
+            return "END Agrosphere: Your AI farming companion. We provide crop guidance, expert access, and marketplace for Nigerian farmers."
     
     elif level == 2:
         if session_data.get('action') == 'register':

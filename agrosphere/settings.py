@@ -14,6 +14,7 @@ from datetime import timedelta
 from pathlib import Path
 import os
 from decouple import config
+import dj_database_url
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -29,7 +30,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = []
 
@@ -102,12 +103,35 @@ WSGI_APPLICATION = 'agrosphere.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+DATABASE_URL = os.getenv('DATABASE_URL')
+
+if DATABASE_URL:
+    try:
+        DATABASES = {
+            'default': 
+                dj_database_url.config(
+                    default=os.getenv('DATABASE_URL'),
+                    conn_max_age=600,
+                    conn_health_checks=True,
+                )
+            }
+    except Exception as e:
+        print(f"Database Configuration Error: {str(e)}")
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('DB_NAME'),
+            'USER': os.getenv('DB_USER'),
+            'PASSWORD': os.getenv('DB_PASSWORD'),
+            'HOST': os.getenv('DB_HOST'),
+            'PORT': os.getenv('DB_PORT', '5432'),
+        }
     }
-}
+
+SUPABASE_URL = os.getenv('SUPABASE_URL')
+SUPABASE_KEY = os.getenv('SUPABASE_KEY')
+SUPABASE_SECRET_KEY = os.getenv('SUPABASE_SECRET_KEY')
 
 
 # Password validation
@@ -299,6 +323,10 @@ GEMINI_CONFIG = {
     'TEMPERATURE': 0.7,
     'MAX_OUTPUT_TOKENS': 2048,
 }
+
+YARNGPT_API_KEY = os.getenv('YARNGPT_API_KEY')
+
+DEEPGRAM_API_KEY = os.getenv('DEEPGRAM_API_KEY')
 
 # Africa's Talking (USSD) Configuration
 AFRICAS_TALKING_CONFIG = {

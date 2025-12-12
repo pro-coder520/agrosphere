@@ -1,14 +1,9 @@
-"""
-AgroMentor 360 - Investment Views
-Farm investment and portfolio management endpoints
-"""
-
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-from django.db.models import Sum, Count, Q
+from django.db.models import Sum
 from django.utils import timezone
 from decimal import Decimal
 
@@ -63,13 +58,14 @@ def create_opportunity(request):
     if serializer.is_valid():
         # Verify user owns the farm
         farm_id = request.data.get('farm')
-        if not request.user.farms.filter(id=farm_id).exists():
+        # Use explicit filter to avoid potential attribute errors
+        if not request.user.farms.filter(id=farm_id).exists(): # type: ignore
             return Response(
                 {'error': 'You can only create opportunities for your own farms'},
                 status=status.HTTP_403_FORBIDDEN
             )
         
-        opportunity = serializer.save()
+        serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -87,7 +83,8 @@ def invest(request, opportunity_id):
             status=status.HTTP_400_BAD_REQUEST
         )
     
-    if opportunity.closed_at < timezone.now().date():
+    # FIX: Safety check for closed_at
+    if opportunity.closed_at and opportunity.closed_at < timezone.now().date():
         return Response(
             {'error': 'Investment opportunity has ended'},
             status=status.HTTP_400_BAD_REQUEST
@@ -103,7 +100,7 @@ def invest(request, opportunity_id):
     amount = Decimal(amount)
     
     # Check minimum investment
-    if amount < opportunity.minimum_investment_ac:
+    if amount < opportunity.minimum_investment_ac: # Using standard field name
         return Response(
             {'error': f'Minimum investment is {opportunity.minimum_investment_ac}'},
             status=status.HTTP_400_BAD_REQUEST
@@ -118,15 +115,19 @@ def invest(request, opportunity_id):
         )
     
     # Check user's wallet balance
+    # FIX: Handle potential None balance
     eth_service = EthereumService()
-    wallet = request.user.wallet
-    balance = eth_service.get_balance(wallet.address)
-    
-    if balance < float(amount):
-        return Response(
-            {'error': 'Insufficient wallet balance'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+    if hasattr(request.user, 'wallet'):
+        wallet_addr = request.user.wallet.public_key # type: ignore
+        balance = eth_service.get_token_balance(wallet_addr) or 0.0
+        
+        if float(balance) < float(amount):
+            return Response(
+                {'error': 'Insufficient wallet balance'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+    else:
+        return Response({'error': 'No wallet found'}, status=status.HTTP_400_BAD_REQUEST)
     
     # Create investment
     investment = FarmInvestment.objects.create(
@@ -189,7 +190,9 @@ def investment_returns(request, investment_id):
         investor=request.user
     )
     
-    returns = investment.projected_returns.order_by('-distribution_date')
+    # FIX: Use 'returns' (the related_name from InvestmentReturn model), NOT 'projected_returns'
+    returns = investment.returns.order_by('-distribution_date') # type: ignore
+    
     serializer = InvestmentReturnSerializer(returns, many=True)
     return Response(serializer.data)
 
@@ -204,6 +207,7 @@ def portfolio_summary(request):
         total=Sum('amount')
     )['total'] or Decimal('0')
     
+    # Using the reverse relationship 'returns' for calculation
     total_returns = InvestmentReturn.objects.filter(
         investment__investor=request.user
     ).aggregate(
@@ -231,7 +235,8 @@ def portfolio_summary(request):
 def farm_investments(request, farm_id):
     """Get investments for a farm (for farm owners)"""
     # Verify user owns the farm
-    if not request.user.farms.filter(id=farm_id).exists():
+    # Use type ignore to suppress linter on reverse relationship
+    if not request.user.farms.filter(id=farm_id).exists(): # type: ignore
         return Response(
             {'error': 'Unauthorized'},
             status=status.HTTP_403_FORBIDDEN
@@ -268,7 +273,8 @@ def distribute_returns(request, opportunity_id):
     
     return_amount = Decimal(return_amount)
     
-    # Get active investments
+    # Get active investments using related name 'investments'
+    # Assuming related_name='investments' in FarmInvestment model for opportunity FK
     investments = FarmInvestment.objects.filter(opportunity=opportunity, status='active')
     
     if not investments.exists():
@@ -278,7 +284,7 @@ def distribute_returns(request, opportunity_id):
         )
     
     # Calculate proportional returns
-    total_invested = investments.aggregate(Sum('amount'))['amount__sum']
+    total_invested = investments.aggregate(Sum('amount'))['amount__sum'] or Decimal('1')
     
     returns_created = []
     for investment in investments:
