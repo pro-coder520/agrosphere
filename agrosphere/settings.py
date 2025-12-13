@@ -331,7 +331,7 @@ DEEPGRAM_API_KEY = os.getenv('DEEPGRAM_API_KEY')
 # Africa's Talking (USSD) Configuration
 AFRICAS_TALKING_CONFIG = {
     'USERNAME': os.getenv('AFRICAS_TALKING_USERNAME'),
-    'API_KEY': config('AFRICAS_TALKING_API_KEY'),
+    'API_KEY': config('AFRICAS_TALKING_API_KEY', default=""),
     'USSD_SHORT_CODE': config('USSD_SHORT_CODE', default='*384*1234#'),
 }
 
