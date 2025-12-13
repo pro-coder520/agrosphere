@@ -88,11 +88,9 @@ app.conf.update(
     task_routes={
         'notifications.tasks.*': {'queue': 'notifications'},
         'blockchain.tasks.*': {'queue': 'blockchain'},
-        'farming.tasks.*': {'queue': 'farming'},
         'analytics.tasks.*': {'queue': 'analytics'},
         'investments.tasks.*': {'queue': 'investments'},
         'experts.tasks.*': {'queue': 'experts'},
-        'ussd.tasks.*': {'queue': 'ussd'},
     },
     
     # Worker configuration

@@ -1,6 +1,6 @@
 import logging
 from agrosphere import settings
-from deepgram import DeepgramClient, PrerecordedOptions
+from deepgram import DeepgramClient
 from .ai_service import gemini_service # Import Gemini AI service
 from .tts_service import tts_service # Import TTS dependency by YarnGPT 
 
@@ -33,11 +33,11 @@ class SpeechToSpeechService:
             }
             
             # Options for Deepgram
-            options = PrerecordedOptions(
-                model="nova-2", 
-                smart_format=True,
-                language="en" # Detects accents well even if set to English
-            )
+            options = {
+                "model":"nova-2", 
+                "smart_format":"true",
+                "language":"en" # Detects accents well even if set to English
+            }
 
             # Call Deepgram API
             # FIX: Add # type: ignore because 'prerecorded' is generated dynamically
