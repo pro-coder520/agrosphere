@@ -13,6 +13,7 @@ djangorestframework-simplejwt
 cryptography
 django-environ
 PyJWT
+django-cors-headers
 
 # Ethereum Blockchain Integration
 web3
