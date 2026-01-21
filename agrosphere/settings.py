@@ -298,7 +298,7 @@ SPECTACULAR_SETTINGS = {
 
 ETHEREUM_CONFIG = {
     'NETWORK': config('ETHEREUM_NETWORK', default='sepolia'),  # mainnet, sepolia, goerli, ganache
-    'RPC_URL': config('ETHEREUM_RPC_URL', default='https://sepolia.infura.io/v3/YOUR_PROJECT_ID'),
+    'RPC_URL': config('ETHEREUM_RPC_URL'),
     'INFURA_PROJECT_ID': config('INFURA_PROJECT_ID', default=''),
     'INFURA_PROJECT_SECRET': config('INFURA_PROJECT_SECRET', default=''),
     'AGROCOIN_CONTRACT_ADDRESS': config('AGROCOIN_CONTRACT_ADDRESS', default=''),
@@ -309,8 +309,8 @@ ETHEREUM_CONFIG = {
     'GAS_LIMIT': config('GAS_LIMIT', default=100000, cast=int),
     'TRANSACTION_TIMEOUT': 120,  # seconds
     'CHAIN_ID': {
-        'mainnet': 1,
-        'sepolia': 11155111,
+        'mainnet': 534352,
+        'sepolia': 534351,
         'goerli': 5,
         'ganache': 1337,
     },
