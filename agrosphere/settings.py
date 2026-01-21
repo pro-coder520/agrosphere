@@ -311,8 +311,6 @@ ETHEREUM_CONFIG = {
     'CHAIN_ID': {
         'mainnet': 534352,
         'sepolia': 534351,
-        'goerli': 5,
-        'ganache': 1337,
     },
 }
 
