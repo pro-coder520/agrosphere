@@ -16,7 +16,7 @@ class SpeechToSpeechService:
     def __init__(self):
         # Initialize Deepgram with API Key from settings
         api_key = getattr(settings, 'DEEPGRAM_API_KEY', '')
-        self.deepgram = DeepgramClient(api_key)
+        self.deepgram = DeepgramClient(api_key=api_key)
 
     def process_voice_query(self, audio_file, language_code='ha'):
         """
