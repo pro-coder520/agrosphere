@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    command: ./start.sh
+    volumes:
+      - .:/app
+      - static_volume:/app/static
+    ports:
+      - "10000:10000"
+    env_file:
+      - .env
+    environment:
+      - DJANGO_SETTINGS_MODULE=agrosphere.settings
+
+volumes:
+  static_volume:

@@ -357,6 +357,10 @@ class DiseaseDetection(models.Model):
         verbose_name = 'Disease Detection'
         verbose_name_plural = 'Disease Detections'
         ordering = ['-detected_at']
+        indexes = [
+            models.Index(fields=['crop']),
+            models.Index(fields=['user']),
+        ]
     
     def __str__(self):
         return f"Disease detection for {self.crop.name} - {self.disease_name or 'Analyzing'}"
@@ -415,6 +419,10 @@ class WeatherAlert(models.Model):
         verbose_name = 'Weather Alert'
         verbose_name_plural = 'Weather Alerts'
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['farm', 'is_active']),
+            models.Index(fields=['valid_until']),
+        ]
     
     def __str__(self):
         return f"{self.alert_type} alert for {self.farm.name}"
