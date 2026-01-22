@@ -111,7 +111,7 @@ class Product(models.Model):
         max_length=200,
         null=True,
         blank=True,
-        help_text="Solana transaction hash for traceability"
+        help_text="Ethereum transaction hash for traceability"
     )
     
     # Location
@@ -167,7 +167,7 @@ class Product(models.Model):
     
     def save(self, *args, **kwargs):
         """Auto-calculate Naira price from AgroCoin price"""
-        conversion_rate = Decimal(str(settings.SOLANA_CONFIG['AGROCOIN_TO_NAIRA_RATE']))
+        conversion_rate = Decimal(str(settings.ETHEREUM_CONFIG['AGROCOIN_TO_NAIRA_RATE']))
         self.price_naira = self.price_agrocoin * conversion_rate
         super().save(*args, **kwargs)
 
@@ -337,7 +337,7 @@ class Order(models.Model):
     
     def calculate_totals(self):
         """Calculate order totals in AC and Naira"""
-        conversion_rate = Decimal(str(settings.SOLANA_CONFIG['AGROCOIN_TO_NAIRA_RATE']))
+        conversion_rate = Decimal(str(settings.ETHEREUM_CONFIG['AGROCOIN_TO_NAIRA_RATE']))
         
         # Calculate subtotal
         self.subtotal_ac = sum(Decimal(str(item['price_ac'])) * Decimal(str(item['quantity'])) 
@@ -494,7 +494,7 @@ class Cart(models.Model):
     
     def calculate_total(self):
         """Calculate cart total in AC and Naira"""
-        conversion_rate = Decimal(str(settings.SOLANA_CONFIG['AGROCOIN_TO_NAIRA_RATE']))
+        conversion_rate = Decimal(str(settings.ETHEREUM_CONFIG['AGROCOIN_TO_NAIRA_RATE']))
         
         self.total_ac = sum(
             Decimal(str(item['price_ac'])) * Decimal(str(item['quantity']))
